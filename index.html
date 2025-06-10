@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YP3 Program Evaluation Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+        
+        .dashboard-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #1f2937;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .filter-label {
+            font-size: 0.75rem;
+            color: #d1d5db;
+        }
+        
+        .filter-select {
+            background: #374151;
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        
+        .nav-tabs {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0 2rem;
+        }
+        
+        .nav-tabs ul {
+            list-style: none;
+            display: flex;
+            gap: 0;
+        }
+        
+        .nav-tabs li {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .nav-tabs li.active {
+            border-bottom-color: #3b82f6;
+            background: #f8fafc;
+        }
+        
+        .nav-tabs li:hover {
+            background: #f1f5f9;
+        }
+        
+        .content {
+            flex: 1;
+            padding: 2rem;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .instruction-box {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .instruction-text {
+            font-size: 0.9rem;
+            color: #1e40af;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .status-good {
+            color: #10b981;
+        }
+        
+        .status-warning {
+            color: #f59e0b;
+        }
+        
+        .status-danger {
+            color: #ef4444;
+        }
+        
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .charts-container-reverse {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            background: #e8f4f8;
+            border-radius: 4px;
+            padding: 10px;
+        }
+        
+        .category-overview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .category-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+        
+        .category-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .mental-health {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .economic {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .community {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .category-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .category-summary {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .drill-down-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+        
+        .supporting-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .supporting-metric {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .supporting-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .supporting-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: #f1f5f9;
+            border-radius: 6px;
+        }
+        
+        .toggle-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .toggle-switch {
+            display: flex;
+            background: #e5e7eb;
+            border-radius: 20px;
+            padding: 2px;
+            position: relative;
+        }
+        
+        .toggle-option {
+            padding: 0.25rem 0.75rem;
+            border-radius: 18px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .toggle-option.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .gauge-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            background: #e8f4f8;
+            border-radius: 4px;
+            padding: 2rem;
+        }
+        
+        .gauge-wrapper {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin-bottom: 1rem;
+        }
+        
+        .gauge-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .gauge-mental {
+            background: conic-gradient(
+                from -90deg,
+                #667eea 0deg,
+                #667eea 298deg,
+                #e5e7eb 298deg,
+                #e5e7eb 360deg
+            );
+        }
+        
+        .gauge-economic {
+            background: conic-gradient(
+                from -90deg,
+                #f5576c 0deg,
+                #f5576c 266deg,
+                #e5e7eb 266deg,
+                #e5e7eb 360deg
+            );
+        }
+        
+        .gauge-community {
+            background: conic-gradient(
+                from -90deg,
+                #4facfe 0deg,
+                #4facfe 288deg,
+                #e5e7eb 288deg,
+                #e5e7eb 360deg
+            );
+        }
+        
+        .gauge-inner {
+            width: 140px;
+            height: 140px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .gauge-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            line-height: 1;
+        }
+        
+        .gauge-mental .gauge-value {
+            color: #667eea;
+        }
+        
+        .gauge-economic .gauge-value {
+            color: #f5576c;
+        }
+        
+        .gauge-community .gauge-value {
+            color: #4facfe;
+        }
+        
+        .gauge-text {
+            font-size: 0.8rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 0.25rem;
+        }
+        
+        .gauge-label {
+            font-size: 0.9rem;
+            color: #6b7280;
+            text-align: center;
+            max-width: 200px;
+        }
+        
+        .table-container {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .table-title {
+            background: #374151;
+            color: white;
+            padding: 1rem;
+            font-weight: 600;
+        }
+        
+        .table-content {
+            padding: 1rem;
+        }
+        
+        .table-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .table-row:last-child {
+            border-bottom: none;
+        }
+        
+        .suggestion-text {
+            font-size: 0.9rem;
+            color: #374151;
+        }
+        
+        .frequency-count {
+            font-size: 0.8rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        .feedback-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+        
+        .feedback-item {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            font-style: italic;
+        }
+        
+        .equity-charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .equity-chart-full {
+            grid-column: 1 / -1;
+        }
+        
+        .satisfaction-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .word-cloud-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .word-cloud-mockup {
+            height: 200px;
+            background: #e8f4f8;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4a5568;
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+            padding: 1rem;
+        }
+        
+        .word-item {
+            background: #3b82f6;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+        
+        .word-large {
+            font-size: 1.2rem;
+            background: #10b981;
+        }
+        
+        .word-medium {
+            font-size: 1rem;
+            background: #f59e0b;
+        }
+        
+        .executive-impact {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .executive-impact-score {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #10b981;
+            margin-bottom: 0.5rem;
+        }
+        
+        .executive-impact-label {
+            font-size: 1.2rem;
+            color: #6b7280;
+            margin-bottom: 1rem;
+        }
+        
+        .executive-impact-breakdown {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            font-size: 0.9rem;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="header">
+            <h1>YP3 Program Evaluation Dashboard</h1>
+            <div class="header-controls">
+                <div class="filter-group">
+                    <div class="filter-label">Quarter</div>
+                    <select class="filter-select" id="quarterFilter">
+                        <option>All Quarters</option>
+                        <option>Q1 2025</option>
+                        <option>Q4 2024</option>
+                        <option>Q3 2024</option>
+                        <option>Q2 2024</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-label">School</div>
+                    <select class="filter-select" id="schoolFilter">
+                        <option>All Schools</option>
+                        <option>KIPP</option>
+                        <option>AMY NW</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-label">Cohort</div>
+                    <select class="filter-select" id="cohortFilter">
+                        <option>All Cohorts</option>
+                        <option>11-13</option>
+                        <option>14-17</option>
+                        <option>18-24</option>
+                    </select>
+                </div>
+                <span style="font-size: 0.85rem; color: #d1d5db;">Updated: May 28, 2025</span>
+            </div>
+        </header>
+        
+        <nav class="nav-tabs">
+            <ul>
+                <li class="active" onclick="showPage('executive')">Executive Overview</li>
+                <li onclick="showPage('mental-health')">Mental Health & Wellness</li>
+                <li onclick="showPage('economic')">Economic Empowerment</li>
+                <li onclick="showPage('community')">Community Engagement</li>
+                <li onclick="showPage('satisfaction')">Program Satisfaction</li>
+                <li onclick="showPage('equity')">Equity Analysis</li>
+            </ul>
+        </nav>
+        
+        <main class="content">
+            <!-- Executive Overview Page -->
+            <div id="executive" class="page active">
+                <div class="category-overview">
+                    <div class="category-card" onclick="showPage('mental-health')">
+                        <div class="category-icon mental-health">🧠</div>
+                        <div class="category-title">Mental Health & Wellness</div>
+                        <div class="category-summary">83% overall impact score</div>
+                    </div>
+                    <div class="category-card" onclick="showPage('economic')">
+                        <div class="category-icon economic">💼</div>
+                        <div class="category-title">Economic Empowerment</div>
+                        <div class="category-summary">74% overall impact score</div>
+                    </div>
+                    <div class="category-card" onclick="showPage('community')">
+                        <div class="category-icon community">🤝</div>
+                        <div class="category-title">Community Engagement</div>
+                        <div class="category-summary">80% overall impact score</div>
+                    </div>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value status-good">156</div>
+                        <div class="metric-label">Total Program Participants</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value status-good">89%</div>
+                        <div class="metric-label">Overall Program Completion Rate</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value status-good">4.6/5</div>
+                        <div class="metric-label">Program Satisfaction Score</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value status-good">94%</div>
+                        <div class="metric-label">Would Recommend to Friend</div>
+                    </div>
+                </div>
+                
+                <div class="charts-container-reverse">
+                    <div class="chart-card">
+                        <div class="chart-title">Participant Demographics by Race/Ethnicity</div>
+                        <div class="chart-container">
+                            <canvas id="demographicsRaceChart" width="400" height="280"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">Participant Demographics by Age Cohort</div>
+                        <div class="chart-container">
+                            <canvas id="demographicsAgeChart" width="300" height="280"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mental Health & Wellness Page -->
+            <div id="mental-health" class="page">
+                <div class="instruction-box">
+                    <span>💡</span>
+                    <span class="instruction-text">Click any of the KPIs below to view supporting metrics</span>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card" onclick="toggleSupportingMetrics('trauma')">
+                        <div class="metric-value status-good">92%</div>
+                        <div class="metric-label">Reported increased trauma awareness</div>
+                    </div>
+                    <div class="metric-card" onclick="toggleSupportingMetrics('safety')">
+                        <div class="metric-value status-good">81%</div>
+                        <div class="metric-label">Reported increased personal & digital safety knowledge</div>
+                    </div>
+                    <div class="metric-card" onclick="toggleSupportingMetrics('esteem')">
+                        <div class="metric-value status-warning">73%</div>
+                        <div class="metric-label">Reported increased self-esteem & self-awareness</div>
+                    </div>
+                    <div class="metric-card" onclick="toggleSupportingMetrics('conflict')">
+                        <div class="metric-value status-good">85%</div>
+                        <div class="metric-label">Reported increased conflict resolution skills & mindset</div>
+                    </div>
+                </div>
+                
+                <!-- Supporting Metrics Sections -->
+                <div class="drill-down-section" id="trauma-details">
+                    <div class="chart-title">Trauma Awareness - Supporting Metrics</div>
+                    <div class="supporting-metrics">
+                        <div class="supporting-metric">
+                            <div class="supporting-value">89%</div>
+                            <div class="supporting-label">Reported increased knowledge of trauma</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">87%</div>
+                            <div class="supporting-label">Reported increased knowledge of trauma symptoms</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">94%</div>
+                            <div class="supporting-label">Reported increased knowledge of trauma causes</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">91%</div>
+                            <div class="supporting-label">Can identify trauma-informed response to peer in distress</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="drill-down-section" id="safety-details">
+                    <div class="chart-title">Personal & Digital Safety Knowledge - Supporting Metrics</div>
+                    <div class="supporting-metrics">
+                        <div class="supporting-metric">
+                            <div class="supporting-value">84%</div>
+                            <div class="supporting-label">Understand how to respond when feeling unsafe in community</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">78%</div>
+                            <div class="supporting-label">Reported increased feelings of safety on SEPTA</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">82%</div>
+                            <div class="supporting-label">Reported increased confidence managing privacy settings</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">85%</div>
+                            <div class="supporting-label">Understand what a digital footprint is</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">79%</div>
+                            <div class="supporting-label">Reported mindset shift in sharing videos of violent incidents</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="drill-down-section" id="esteem-details">
+                    <div class="chart-title">Self-Esteem & Self-Awareness - Supporting Metrics</div>
+                    <div class="supporting-metrics">
+                        <div class="supporting-metric" style="border-left-color: #f59e0b;">
+                            <div class="supporting-value">71%</div>
+                            <div class="supporting-label">Expressed increased confidence and self-worth (Self-Esteem)</div>
+                        </div>
+                        <div class="supporting-metric" style="border-left-color: #f59e0b;">
+                            <div class="supporting-value">75%</div>
+                            <div class="supporting-label">Reported increased belief in ability to achieve goals (Self-Esteem)</div>
+                        </div>
+                        <div class="supporting-metric" style="border-left-color: #10b981;">
+                            <div class="supporting-value">78%</div>
+                            <div class="supporting-label">Reported increased understanding of strengths (Self-Awareness)</div>
+                        </div>
+                        <div class="supporting-metric" style="border-left-color: #10b981;">
+                            <div class="supporting-value">82%</div>
+                            <div class="supporting-label">Reported increased understanding of areas for improvement (Self-Awareness)</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="drill-down-section" id="conflict-details">
+                    <div class="chart-title">Conflict Resolution Skills & Mindset - Supporting Metrics</div>
+                    <div class="supporting-metrics">
+                        <div class="supporting-metric">
+                            <div class="supporting-value">88%</div>
+                            <div class="supporting-label">Demonstrated positive mindset shift around conflict</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">83%</div>
+                            <div class="supporting-label">Reported increased confidence in de-escalating arguments</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">86%</div>
+                            <div class="supporting-label">Understand importance of considering others' feelings</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">84%</div>
+                            <div class="supporting-label">Understand how words and actions impact arguments</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">79%</div>
+                            <div class="supporting-label">Utilized conflict resolution technique within timeframe</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <div class="chart-title">Mental Health Program Impact Score</div>
+                        <div class="gauge-container">
+                            <div class="gauge-wrapper">
+                                <div class="gauge-circle gauge-mental">
+                                    <div class="gauge-inner">
+                                        <div class="gauge-value">83%</div>
+                                        <div class="gauge-text">IMPACT</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="gauge-label">Combined score across all mental health metrics</div>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">Mental Health Outcomes - Before vs After</div>
+                        <div class="chart-container">
+                            <canvas id="mentalHealthChart" width="400" height="280"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="feedback-section">
+                    <div class="chart-title">Participant Insights - "How would you define trauma?"</div>
+                    <div class="feedback-item">"I learned that trauma isn't just big events - it can be small things that build up too."</div>
+                    <div class="feedback-item">"Now I understand why I react certain ways and I have tools to help myself."</div>
+                    <div class="feedback-item">"The program helped me realize trauma affects everyone differently."</div>
+                </div>
+            </div>
+            
+            <!-- Economic Empowerment Page -->
+            <div id="economic" class="page">
+                <div class="instruction-box">
+                    <span>💡</span>
+                    <span class="instruction-text">Click any of the KPIs below to view supporting metrics</span>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card" onclick="toggleSupportingMetrics('money')">
+                        <div class="metric-value status-warning">69%</div>
+                        <div class="metric-label">Reported increased money management skills</div>
+                    </div>
+                    <div class="metric-card" onclick="toggleSupportingMetrics('career')">
+                        <div class="metric-value status-good">78%</div>
+                        <div class="metric-label">Reported increased career or higher education readiness</div>
+                    </div>
+                </div>
+                
+                <!-- Supporting Metrics Sections -->
+                <div class="drill-down-section" id="money-details">
+                    <div class="chart-title">Money Management Skills - Supporting Metrics</div>
+                    <div class="supporting-metrics">
+                        <div class="supporting-metric">
+                            <div class="supporting-value">71%</div>
+                            <div class="supporting-label">Reported increased confidence in money management</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">68%</div>
+                            <div class="supporting-label">Understand difference between spending needs and wants</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">66%</div>
+                            <div class="supporting-label">Reported increased knowledge of how to create budget and save money</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="drill-down-section" id="career-details">
+                    <div class="chart-title">Career or Higher Education Readiness - Supporting Metrics</div>
+                    <div class="supporting-metrics">
+                        <div class="supporting-metric">
+                            <div class="supporting-value">82%</div>
+                            <div class="supporting-label">Reported increased awareness of career and higher education opportunities</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">76%</div>
+                            <div class="supporting-label">Reported increased clarity about type of job they would like</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">74%</div>
+                            <div class="supporting-label">Reported increased confidence using digital tools for career/school options</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">79%</div>
+                            <div class="supporting-label">Can identify person or place for job or college-related support</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <div class="chart-title">Economic Empowerment Impact Score</div>
+                        <div class="gauge-container">
+                            <div class="gauge-wrapper">
+                                <div class="gauge-circle gauge-economic">
+                                    <div class="gauge-inner">
+                                        <div class="gauge-value">74%</div>
+                                        <div class="gauge-text">IMPACT</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="gauge-label">Combined score across all economic empowerment metrics</div>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">Economic Empowerment - Before vs After</div>
+                        <div class="chart-container">
+                            <canvas id="economicChart" width="400" height="280"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="feedback-section">
+                    <div class="chart-title">Career Development Progress</div>
+                    <div class="feedback-item">"I never knew there were so many career paths available to me."</div>
+                    <div class="feedback-item">"Learning to budget has helped me save for the first time in my life."</div>
+                    <div class="feedback-item">"The job interview practice gave me confidence I didn't have before."</div>
+                </div>
+            </div>
+            
+            <!-- Community Engagement Page -->
+            <div id="community" class="page">
+                <div class="instruction-box">
+                    <span>💡</span>
+                    <span class="instruction-text">Click any of the KPIs below to view supporting metrics</span>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card" onclick="toggleSupportingMetrics('resources')">
+                        <div class="metric-value status-good">88%</div>
+                        <div class="metric-label">Reported increased awareness of community resources & support</div>
+                    </div>
+                    <div class="metric-card" onclick="toggleSupportingMetrics('connection')">
+                        <div class="metric-value status-good">72%</div>
+                        <div class="metric-label">Reported increased connection to their community</div>
+                    </div>
+                </div>
+                
+                <!-- Supporting Metrics Sections -->
+                <div class="drill-down-section" id="resources-details">
+                    <div class="chart-title">Community Resources & Support - Supporting Metrics</div>
+                    <div class="supporting-metrics">
+                        <div class="supporting-metric">
+                            <div class="supporting-value">90%</div>
+                            <div class="supporting-label">Reported increased awareness of community resources and support</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">86%</div>
+                            <div class="supporting-label">Reported increased awareness of volunteer opportunities</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="drill-down-section" id="connection-details">
+                    <div class="chart-title">Feeling Connected to Community - Supporting Metrics</div>
+                    <div class="supporting-metrics">
+                        <div class="supporting-metric">
+                            <div class="supporting-value">75%</div>
+                            <div class="supporting-label">Reported increased confidence in ability to make difference in community</div>
+                        </div>
+                        <div class="supporting-metric">
+                            <div class="supporting-value">69%</div>
+                            <div class="supporting-label">Reported increased connection to people and needs in community</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <div class="chart-title">Community Engagement Impact Score</div>
+                        <div class="gauge-container">
+                            <div class="gauge-wrapper">
+                                <div class="gauge-circle gauge-community">
+                                    <div class="gauge-inner">
+                                        <div class="gauge-value">80%</div>
+                                        <div class="gauge-text">IMPACT</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="gauge-label">Combined score across all community engagement metrics</div>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">Community Engagement - Before vs After</div>
+                        <div class="chart-container">
+                            <canvas id="communityChart" width="400" height="280"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="feedback-section">
+                    <div class="chart-title">Community Impact Stories</div>
+                    <div class="feedback-item">"I found a food bank near my house that I never knew existed."</div>
+                    <div class="feedback-item">"Volunteering at the community center made me feel like I belong."</div>
+                    <div class="feedback-item">"Now I know who to call when I need help with housing issues."</div>
+                </div>
+            </div>
+            
+            <!-- Program Satisfaction Page -->
+            <div id="satisfaction" class="page">
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value status-good">94%</div>
+                        <div class="metric-label">Would recommend program to a friend</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value status-good">4.6/5</div>
+                        <div class="metric-label">Overall satisfaction score</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value status-good">89%</div>
+                        <div class="metric-label">Program completion rate</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value status-warning">73%</div>
+                        <div class="metric-label">Workshop attendance rate</div>
+                    </div>
+                </div>
+                
+                <div class="satisfaction-grid">
+                    <div class="chart-card">
+                        <div class="chart-title">Programming Suggestions</div>
+                        <div class="chart-container">
+                            <canvas id="programmingSuggestionsChart" width="400" height="280"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">Staff Suggestions</div>
+                        <div class="chart-container">
+                            <canvas id="staffSuggestionsChart" width="400" height="280"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="word-cloud-container">
+                    <div class="chart-title">What have you learned from YP3 that will help you prevent violence in the community?</div>
+                    <div class="word-cloud-mockup">
+                        <span class="word-item word-large">Communication</span>
+                        <span class="word-item word-medium">De-escalation</span>
+                        <span class="word-item">Empathy</span>
+                        <span class="word-item word-large">Conflict resolution</span>
+                        <span class="word-item">Community resources</span>
+                        <span class="word-item word-medium">Self-awareness</span>
+                        <span class="word-item">Trauma understanding</span>
+                        <span class="word-item word-medium">Active listening</span>
+                        <span class="word-item">Problem solving</span>
+                        <span class="word-item word-large">Emotional regulation</span>
+                        <span class="word-item">Peer support</span>
+                        <span class="word-item">Safety strategies</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Equity Analysis Page -->
+            <div id="equity" class="page">
+                <div class="equity-charts-grid">
+                    <div class="chart-card">
+                        <div class="toggle-container">
+                            <span class="toggle-label">View by:</span>
+                            <div class="toggle-switch">
+                                <div class="toggle-option active" onclick="toggleEquityView('completion', 'race')">Race</div>
+                                <div class="toggle-option" onclick="toggleEquityView('completion', 'gender')">Gender</div>
+                                <div class="toggle-option" onclick="toggleEquityView('completion', 'age')">Age</div>
+                            </div>
+                        </div>
+                        <div class="chart-title">Program Completion</div>
+                        <div class="chart-container">
+                            <canvas id="completionChart" width="400" height="260"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="toggle-container">
+                            <span class="toggle-label">View by:</span>
+                            <div class="toggle-switch">
+                                <div class="toggle-option active" onclick="toggleEquityView('satisfaction', 'race')">Race</div>
+                                <div class="toggle-option" onclick="toggleEquityView('satisfaction', 'gender')">Gender</div>
+                                <div class="toggle-option" onclick="toggleEquityView('satisfaction', 'age')">Age</div>
+                            </div>
+                        </div>
+                        <div class="chart-title">Program Satisfaction</div>
+                        <div class="chart-container">
+                            <canvas id="satisfactionEquityChart" width="400" height="260"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-card equity-chart-full">
+                    <div class="toggle-container">
+                        <span class="toggle-label">View by:</span>
+                        <div class="toggle-switch">
+                            <div class="toggle-option active" onclick="toggleEquityView('outcomes', 'race')">Race</div>
+                            <div class="toggle-option" onclick="toggleEquityView('outcomes', 'gender')">Gender</div>
+                            <div class="toggle-option" onclick="toggleEquityView('outcomes', 'age')">Age</div>
+                        </div>
+                    </div>
+                    <div class="chart-title">Core Outcomes Achievement</div>
+                    <div class="chart-container">
+                        <canvas id="outcomesChart" width="800" height="280"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        // Global variables for charts
+        let completionChart, satisfactionEquityChart, outcomesChart;
+        
+        // Initialize charts when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeExecutiveCharts();
+            initializeCategoryCharts();
+            initializeSatisfactionCharts();
+            initializeEquityCharts();
+        });
+        
+        function initializeExecutiveCharts() {
+            // Demographics by Race Chart
+            const raceCtx = document.getElementById('demographicsRaceChart').getContext('2d');
+            new Chart(raceCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Black/African American', 'Hispanic/Latino', 'White', 'Asian', 'Other'],
+                    datasets: [{
+                        data: [45, 28, 18, 6, 3],
+                        backgroundColor: ['#667eea', '#f5576c', '#4facfe', '#10b981', '#f59e0b'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // Demographics by Age Chart (cohort groups)
+            const ageCtx = document.getElementById('demographicsAgeChart').getContext('2d');
+            new Chart(ageCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['11-13', '14-17', '18-24'],
+                    datasets: [{
+                        data: [28, 42, 30],
+                        backgroundColor: '#4facfe',
+                        borderColor: '#3b82f6',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 50,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function initializeCategoryCharts() {
+            // Mental Health Before/After Chart
+            const mentalHealthCtx = document.getElementById('mentalHealthChart');
+            if (mentalHealthCtx) {
+                new Chart(mentalHealthCtx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Trauma Awareness', 'Safety Knowledge', 'Self-Esteem & Awareness', 'Conflict Resolution'],
+                        datasets: [{
+                            label: 'Before Program',
+                            data: [45, 48, 52, 43],
+                            backgroundColor: '#e5e7eb',
+                            borderColor: '#9ca3af',
+                            borderWidth: 1
+                        }, {
+                            label: 'After Program',
+                            data: [92, 81, 73, 85],
+                            backgroundColor: '#667eea',
+                            borderColor: '#4f46e5',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Economic Before/After Chart
+            const economicCtx = document.getElementById('economicChart');
+            if (economicCtx) {
+                new Chart(economicCtx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Money Management', 'Career/Education Readiness'],
+                        datasets: [{
+                            label: 'Before Program',
+                            data: [35, 42],
+                            backgroundColor: '#e5e7eb',
+                            borderColor: '#9ca3af',
+                            borderWidth: 1
+                        }, {
+                            label: 'After Program',
+                            data: [69, 78],
+                            backgroundColor: '#f5576c',
+                            borderColor: '#ef4444',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Community Before/After Chart
+            const communityCtx = document.getElementById('communityChart');
+            if (communityCtx) {
+                new Chart(communityCtx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Resource Awareness', 'Community Connection'],
+                        datasets: [{
+                            label: 'Before Program',
+                            data: [38, 45],
+                            backgroundColor: '#e5e7eb',
+                            borderColor: '#9ca3af',
+                            borderWidth: 1
+                        }, {
+                            label: 'After Program',
+                            data: [88, 72],
+                            backgroundColor: '#4facfe',
+                            borderColor: '#3b82f6',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function initializeSatisfactionCharts() {
+            // Programming Suggestions Chart
+            const programmingCtx = document.getElementById('programmingSuggestionsChart');
+            if (programmingCtx) {
+                new Chart(programmingCtx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['More Practice Time', 'Weekend Sessions', 'Longer Duration', 'Interactive Activities', 'Real-world Application'],
+                        datasets: [{
+                            data: [42, 38, 28, 25, 22],
+                            backgroundColor: '#667eea',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Staff Suggestions Chart
+            const staffCtx = document.getElementById('staffSuggestionsChart');
+            if (staffCtx) {
+                new Chart(staffCtx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['More One-on-One Support', 'Follow-up Check-ins', 'Additional Staff', 'Specialized Training', 'Peer Mentoring'],
+                        datasets: [{
+                            data: [35, 30, 22, 18, 15],
+                            backgroundColor: '#f5576c',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function initializeEquityCharts() {
+            // Program Completion Chart
+            const completionCtx = document.getElementById('completionChart').getContext('2d');
+            completionChart = new Chart(completionCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Black/African American', 'Hispanic/Latino', 'White', 'Asian', 'Other'],
+                    datasets: [{
+                        data: [87, 91, 89, 94, 85],
+                        backgroundColor: '#667eea',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Program Satisfaction Chart
+            const satisfactionEquityCtx = document.getElementById('satisfactionEquityChart').getContext('2d');
+            satisfactionEquityChart = new Chart(satisfactionEquityCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Black/African American', 'Hispanic/Latino', 'White', 'Asian', 'Other'],
+                    datasets: [{
+                        data: [4.5, 4.7, 4.6, 4.8, 4.4],
+                        backgroundColor: '#f5576c',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 5,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '/5';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Core Outcomes Chart
+            const outcomesCtx = document.getElementById('outcomesChart').getContext('2d');
+            outcomesChart = new Chart(outcomesCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mental Health & Wellness', 'Economic Empowerment', 'Community Engagement'],
+                    datasets: [{
+                        label: 'Black/African American',
+                        data: [85, 72, 83],
+                        backgroundColor: '#667eea'
+                    }, {
+                        label: 'Hispanic/Latino',
+                        data: [84, 76, 81],
+                        backgroundColor: '#f5576c'
+                    }, {
+                        label: 'White',
+                        data: [82, 81, 78],
+                        backgroundColor: '#4facfe'
+                    }, {
+                        label: 'Asian',
+                        data: [87, 79, 85],
+                        backgroundColor: '#10b981'
+                    }, {
+                        label: 'Other',
+                        data: [80, 74, 77],
+                        backgroundColor: '#f59e0b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function showPage(pageId) {
+            // Hide all pages
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => page.classList.remove('active'));
+            
+            // Hide all nav items
+            const navItems = document.querySelectorAll('.nav-tabs li');
+            navItems.forEach(item => item.classList.remove('active'));
+            
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // Highlight selected nav item
+            event.target.classList.add('active');
+            
+            // Close all supporting metrics when switching pages (accordion reset)
+            const openSections = document.querySelectorAll('.drill-down-section');
+            openSections.forEach(section => {
+                section.style.display = 'none';
+                section.setAttribute('data-open', 'false');
+            });
+        }
+        
+        function toggleSupportingMetrics(metricId) {
+            // Close all sections first
+            const allSections = document.querySelectorAll('.drill-down-section');
+            allSections.forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Get the target section
+            const detailsSection = document.getElementById(metricId + '-details');
+            
+            // Check if this section was already open (if so, keep it closed)
+            const wasOpen = detailsSection.getAttribute('data-open') === 'true';
+            
+            // Reset all data-open attributes
+            allSections.forEach(section => {
+                section.setAttribute('data-open', 'false');
+            });
+            
+            // If it wasn't open, open it
+            if (!wasOpen) {
+                detailsSection.style.display = 'block';
+                detailsSection.setAttribute('data-open', 'true');
+            }
+        }
+        
+        function toggleEquityView(chartType, demographic) {
+            // Update toggle buttons
+            const container = event.target.closest('.toggle-container');
+            const options = container.querySelectorAll('.toggle-option');
+            options.forEach(option => option.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Data for different demographics
+            const raceData = {
+                completion: {
+                    labels: ['Black/African American', 'Hispanic/Latino', 'White', 'Asian', 'Other'],
+                    data: [87, 91, 89, 94, 85]
+                },
+                satisfaction: {
+                    labels: ['Black/African American', 'Hispanic/Latino', 'White', 'Asian', 'Other'],
+                    data: [4.5, 4.7, 4.6, 4.8, 4.4]
+                },
+                outcomes: {
+                    labels: ['Mental Health & Wellness', 'Economic Empowerment', 'Community Engagement'],
+                    datasets: [{
+                        label: 'Black/African American',
+                        data: [85, 72, 83],
+                        backgroundColor: '#667eea'
+                    }, {
+                        label: 'Hispanic/Latino',
+                        data: [84, 76, 81],
+                        backgroundColor: '#f5576c'
+                    }, {
+                        label: 'White',
+                        data: [82, 81, 78],
+                        backgroundColor: '#4facfe'
+                    }, {
+                        label: 'Asian',
+                        data: [87, 79, 85],
+                        backgroundColor: '#10b981'
+                    }, {
+                        label: 'Other',
+                        data: [80, 74, 77],
+                        backgroundColor: '#f59e0b'
+                    }]
+                }
+            };
+            
+            const genderData = {
+                completion: {
+                    labels: ['Male', 'Female', 'Non-binary'],
+                    data: [88, 90, 87]
+                },
+                satisfaction: {
+                    labels: ['Male', 'Female', 'Non-binary'],
+                    data: [4.5, 4.7, 4.6]
+                },
+                outcomes: {
+                    labels: ['Mental Health & Wellness', 'Economic Empowerment', 'Community Engagement'],
+                    datasets: [{
+                        label: 'Male',
+                        data: [82, 78, 80],
+                        backgroundColor: '#4facfe'
+                    }, {
+                        label: 'Female',
+                        data: [84, 71, 81],
+                        backgroundColor: '#f5576c'
+                    }, {
+                        label: 'Non-binary',
+                        data: [86, 76, 83],
+                        backgroundColor: '#10b981'
+                    }]
+                }
+            };
+            
+            const ageData = {
+                completion: {
+                    labels: ['11-13', '14-17', '18-24'],
+                    data: [92, 89, 86]
+                },
+                satisfaction: {
+                    labels: ['11-13', '14-17', '18-24'],
+                    data: [4.8, 4.6, 4.5]
+                },
+                outcomes: {
+                    labels: ['Mental Health & Wellness', 'Economic Empowerment', 'Community Engagement'],
+                    datasets: [{
+                        label: '11-13',
+                        data: [88, 65, 85],
+                        backgroundColor: '#667eea'
+                    }, {
+                        label: '14-17',
+                        data: [84, 75, 79],
+                        backgroundColor: '#f5576c'
+                    }, {
+                        label: '18-24',
+                        data: [81, 82, 78],
+                        backgroundColor: '#4facfe'
+                    }]
+                }
+            };
+            
+            let dataSource;
+            if (demographic === 'race') {
+                dataSource = raceData;
+            } else if (demographic === 'gender') {
+                dataSource = genderData;
+            } else {
+                dataSource = ageData;
+            }
+            
+            // Update the appropriate chart
+            if (chartType === 'completion') {
+                completionChart.data.labels = dataSource.completion.labels;
+                completionChart.data.datasets[0].data = dataSource.completion.data;
+                completionChart.update();
+            } else if (chartType === 'satisfaction') {
+                satisfactionEquityChart.data.labels = dataSource.satisfaction.labels;
+                satisfactionEquityChart.data.datasets[0].data = dataSource.satisfaction.data;
+                satisfactionEquityChart.update();
+            } else if (chartType === 'outcomes') {
+                outcomesChart.data.labels = dataSource.outcomes.labels;
+                outcomesChart.data.datasets = dataSource.outcomes.datasets;
+                outcomesChart.update();
+            }
+        }
+        
+        // Add click handlers to metric cards for animation
+        document.querySelectorAll('.metric-card').forEach(card => {
+            card.addEventListener('click', function() {
+                // Only animate if it doesn't have an onclick handler for expanding
+                if (!this.getAttribute('onclick')) {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 150);
+                }
+            });
+        });
+        
+        // Add filter change handlers
+        document.getElementById('quarterFilter').addEventListener('change', function() {
+            console.log('Quarter filter changed to:', this.value);
+        });
+        
+        document.getElementById('schoolFilter').addEventListener('change', function() {
+            console.log('School filter changed to:', this.value);
+        });
+        
+        document.getElementById('cohortFilter').addEventListener('change', function() {
+            console.log('Cohort filter changed to:', this.value);
+        });
+    </script>
+</body>
+</html>
